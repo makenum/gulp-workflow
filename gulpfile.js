@@ -15,39 +15,13 @@ var zip = require('gulp-zip'); //打包
 var archiver = require('gulp-archiver'); //归档
 var moment = require('moment'); //时间格式化
 
-//图片精灵
-var buffer = require('vinyl-buffer');
-var imagemin = require('gulp-imagemin');
-var merge = require('merge-stream');
-var spritesmith = require('gulp.spritesmith');
-
-//图片精灵任务
-gulp.task('sprite', function() {
-    var spriteData = gulp.src('src/images/slice/*.png').pipe(spritesmith({
-        imgName: 'sprite.png',
-        cssName: 'sprite.scss',
-        cssFormat: 'scss',
-        padding: 20,
-        algorithm: 'top-down'
-    }));
-
-    var imgStream = spriteData.img
-        .pipe(buffer())
-        .pipe(imagemin())
-        .pipe(gulp.dest('src/images/'));
-
-    var cssStream = spriteData.css
-        .pipe(gulp.dest('src/scss/'));
-    return merge(imgStream, cssStream);
-});
-
-
 //postcss
 var postcss = require('gulp-postcss');
 var px2rem = require('postcss-px2rem');
 var processors = [px2rem({ remUnit: 75 })]; //转换rem插件，默认设计稿750px
 var autoprefixer = require('autoprefixer'); //css3后缀
 
+var compass = require('gulp-compass');
 
 // 启动本地服务器
 gulp.task('browserSync', function() {
@@ -60,9 +34,12 @@ gulp.task('browserSync', function() {
 
 //对wap文件夹操作
 gulp.task('wapsass', function() {
-    return gulp.src('src/scss/wap-main.scss')
-        .pipe(sass().on('error', sass.logError))
-        .pipe(concat('wap.css'))
+    return gulp.src('src/sass/wap.scss')
+        .pipe(compass({
+            config_file: 'config.rb',
+            css: 'src/css',
+            sass: 'src/sass'
+        }))
         .pipe(postcss(processors)) //rem
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
@@ -72,9 +49,12 @@ gulp.task('wapsass', function() {
 
 //对web文件夹操作
 gulp.task('websass', function() {
-    return gulp.src('src/scss/web-main.scss')
-        .pipe(sass().on('error', sass.logError))
-        .pipe(concat('web.css'))
+    return gulp.src('src/sass/web.scss')
+        .pipe(compass({
+            config_file: 'config.rb',
+            css: 'src/css',
+            sass: 'src/sass'
+        }))
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
             stream: true
@@ -84,7 +64,7 @@ gulp.task('websass', function() {
 
 // 监听
 gulp.task('watch', function() {
-    gulp.watch('src/scss/*.scss', ['wapsass', 'websass']);
+    gulp.watch('src/sass/*.scss', ['wapsass', 'websass']);
     gulp.watch('src/*.html', browserSync.reload);
     gulp.watch('src/js/**/*', browserSync.reload);
 });
