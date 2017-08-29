@@ -23,7 +23,7 @@ var spritesmith = require('gulp.spritesmith');
 
 //图片精灵任务
 gulp.task('sprite', function() {
-    var spriteData = gulp.src('app/images/slice/*.png').pipe(spritesmith({
+    var spriteData = gulp.src('src/images/slice/*.png').pipe(spritesmith({
         imgName: 'sprite.png',
         cssName: 'sprite.scss',
         cssFormat: 'scss',
@@ -34,10 +34,10 @@ gulp.task('sprite', function() {
     var imgStream = spriteData.img
         .pipe(buffer())
         .pipe(imagemin())
-        .pipe(gulp.dest('app/images/'));
+        .pipe(gulp.dest('src/images/'));
 
     var cssStream = spriteData.css
-        .pipe(gulp.dest('app/scss/'));
+        .pipe(gulp.dest('src/scss/'));
     return merge(imgStream, cssStream);
 });
 
@@ -53,29 +53,29 @@ var autoprefixer = require('autoprefixer'); //css3后缀
 gulp.task('browserSync', function() {
     browserSync({
         server: {
-            baseDir: 'app'
+            baseDir: 'src'
         }
     });
 });
 
 //对wap文件夹操作
 gulp.task('wapsass', function() {
-    return gulp.src('app/scss/wap-main.scss')
+    return gulp.src('src/scss/wap-main.scss')
         .pipe(sass().on('error', sass.logError))
         .pipe(concat('wap.css'))
         .pipe(postcss(processors)) //rem
-        .pipe(gulp.dest('app/css'))
+        .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
             stream: true
         }));
 });
 
-//对pc文件夹操作
-gulp.task('pcsass', function() {
-    return gulp.src('app/scss/pc-main.scss')
+//对web文件夹操作
+gulp.task('websass', function() {
+    return gulp.src('src/scss/web-main.scss')
         .pipe(sass().on('error', sass.logError))
-        .pipe(concat('pc.css'))
-        .pipe(gulp.dest('app/css'))
+        .pipe(concat('web.css'))
+        .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
             stream: true
         }));
@@ -84,9 +84,9 @@ gulp.task('pcsass', function() {
 
 // 监听
 gulp.task('watch', function() {
-    gulp.watch('app/scss/*.scss', ['wapsass', 'pcsass']);
-    gulp.watch('app/*.html', browserSync.reload);
-    gulp.watch('app/js/**/*', browserSync.reload);
+    gulp.watch('src/scss/*.scss', ['wapsass', 'websass']);
+    gulp.watch('src/*.html', browserSync.reload);
+    gulp.watch('src/js/**/*', browserSync.reload);
 });
 
 // 优化任务
@@ -94,7 +94,7 @@ gulp.task('watch', function() {
 
 //合并压缩css
 gulp.task('css', function() {
-    return gulp.src('app/css/*.css')
+    return gulp.src('src/css/*.css')
         .pipe(postcss([autoprefixer()]))
         .pipe(cssnano())
         .pipe(gulp.dest('dist/css'));
@@ -103,7 +103,7 @@ gulp.task('css', function() {
 
 // 合并压缩html文件中的css、js
 gulp.task('useref', function() {
-    return gulp.src('app/*.html')
+    return gulp.src('src/*.html')
         .pipe(useref())
         .pipe(gulpIf('*.js', uglify()))
         .pipe(gulpIf('*.css', postcss([autoprefixer()])))
@@ -113,7 +113,7 @@ gulp.task('useref', function() {
 
 // 压缩图片
 gulp.task('images', function() {
-    return gulp.src('app/images/**/*.+(png|jpg|jpeg|gif|svg)')
+    return gulp.src('src/images/**/*.+(png|jpg|jpeg|gif|svg)')
         // 清除图片缓存
         .pipe(cache(imagemin({
             interlaced: true,
@@ -123,7 +123,7 @@ gulp.task('images', function() {
 
 // 复制js文件夹 
 gulp.task('copyjs', function() {
-    return gulp.src('app/js/**/*')
+    return gulp.src('src/js/**/*')
         .pipe(gulp.dest('dist/js'));
 });
 
@@ -142,7 +142,7 @@ gulp.task('clean:dist', function() {
 // ---------------
 
 gulp.task('default', function(callback) {
-    runSequence(['wapsass', 'pcsass', 'browserSync'], 'watch', //'fileinclude', 
+    runSequence(['wapsass', 'websass', 'browserSync'], 'watch', //'fileinclude', 
         callback
     )
 });
@@ -151,7 +151,7 @@ gulp.task('default', function(callback) {
 gulp.task('build', function(callback) {
     runSequence(
         'clean:dist',
-        'wapsass', 'pcsass', ['useref', 'images', 'copyjs', 'css'],
+        'wapsass', 'websass', ['useref', 'images', 'copyjs', 'css'],
         callback
     )
 });
@@ -165,7 +165,7 @@ gulp.task('zip', function() {
 
 //归档任务
 gulp.task('archiver', function() {
-    return gulp.src('app/**')
+    return gulp.src('src/**')
         .pipe(archiver(moment().format("YYYY-M-D") + '.zip'))
         .pipe(gulp.dest('./archiver'));
 });
