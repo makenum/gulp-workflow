@@ -6,7 +6,6 @@ var useref = require('gulp-useref');
 var uglify = require('gulp-uglify');
 var gulpIf = require('gulp-if');
 var cssnano = require('gulp-cssnano');
-var imagemin = require('gulp-imagemin');
 var cache = require('gulp-cache');
 var del = require('del');
 var runSequence = require('run-sequence');
@@ -19,8 +18,9 @@ var moment = require('moment'); //时间格式化
 var postcss = require('gulp-postcss');
 var px2rem = require('postcss-px2rem');
 var processors = [px2rem({ remUnit: 75 })]; //转换rem插件，默认设计稿750px
-var autoprefixer = require('autoprefixer'); //css3后缀
+var autoprefixer = require('autoprefixer'); //浏览器前缀
 
+//compass
 var compass = require('gulp-compass');
 
 // 启动本地服务器
@@ -40,6 +40,7 @@ gulp.task('wapsass', function() {
             css: 'src/css',
             sass: 'src/sass'
         }))
+        .pipe(sass().on('error', sass.logError))
         .pipe(postcss(processors)) //rem
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
@@ -55,6 +56,7 @@ gulp.task('websass', function() {
             css: 'src/css',
             sass: 'src/sass'
         }))
+        .pipe(sass().on('error', sass.logError))
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.reload({
             stream: true
@@ -70,7 +72,6 @@ gulp.task('watch', function() {
 });
 
 // 优化任务
-// ------------------
 
 //合并压缩css
 gulp.task('css', function() {
@@ -91,13 +92,9 @@ gulp.task('useref', function() {
         .pipe(gulp.dest('dist'));
 });
 
-// 压缩图片
+// 复制images文件夹
 gulp.task('images', function() {
-    return gulp.src('src/images/**/*.+(png|jpg|jpeg|gif|svg)')
-        // 清除图片缓存
-        .pipe(cache(imagemin({
-            interlaced: true,
-        })))
+    return gulp.src('src/images/*.+(png|jpg|jpeg|gif|svg)')
         .pipe(gulp.dest('dist/images'));
 });
 
@@ -105,6 +102,12 @@ gulp.task('images', function() {
 gulp.task('copyjs', function() {
     return gulp.src('src/js/**/*')
         .pipe(gulp.dest('dist/js'));
+});
+
+// 复制lib文件夹 
+gulp.task('copylib', function() {
+    return gulp.src('src/lib/**/*')
+        .pipe(gulp.dest('dist/lib'));
 });
 
 // 每次build清除dist文件夹 
@@ -118,11 +121,10 @@ gulp.task('clean:dist', function() {
     return del.sync(['dist/**/*', '!dist/images', '!dist/images/**/*']);
 });
 
-// 构建队列
-// ---------------
+// 构建队列---------------
 
 gulp.task('default', function(callback) {
-    runSequence(['wapsass', 'websass', 'browserSync'], 'watch', //'fileinclude', 
+    runSequence(['wapsass', 'websass', 'browserSync'], 'watch',
         callback
     )
 });
@@ -131,7 +133,7 @@ gulp.task('default', function(callback) {
 gulp.task('build', function(callback) {
     runSequence(
         'clean:dist',
-        'wapsass', 'websass', ['useref', 'images', 'copyjs', 'css'],
+        'wapsass', 'websass', ['useref', 'images', 'copyjs', 'copylib', 'css'],
         callback
     )
 });
@@ -140,12 +142,12 @@ gulp.task('build', function(callback) {
 gulp.task('zip', function() {
     gulp.src('dist/**/*')
         .pipe(zip('html.zip'))
-        .pipe(gulp.dest('./'));
+        .pipe(gulp.dest('dist'));
 });
 
 //归档任务
 gulp.task('archiver', function() {
     return gulp.src('src/**')
         .pipe(archiver(moment().format("YYYY-M-D") + '.zip'))
-        .pipe(gulp.dest('./archiver'));
+        .pipe(gulp.dest('archiver'));
 });

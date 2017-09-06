@@ -20,7 +20,6 @@
     "gulp-cssnano": "^2.1.0",
     "gulp-file-include": "^1.2.0",
     "gulp-if": "^2.0.0",
-    "gulp-imagemin": "^2.3.0",
     "gulp-postcss": "^7.0.0",
     "gulp-sass": "^3.0.0",
     "gulp-sourcemaps": "^1.12.0",
